@@ -2,6 +2,9 @@
 
 ## Not Released
 
+## 2.21
+
+- NEW : We can now add an additional product with a discount - *23/08/2023* - 2.21.0
 
 ## 2.20
 

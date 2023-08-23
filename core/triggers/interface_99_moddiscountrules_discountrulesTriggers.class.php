@@ -97,7 +97,8 @@ class InterfacediscountrulesTriggers extends DolibarrTriggers
 	 */
 	public function runTrigger($action, $object, User $user, Translate $langs, Conf $conf)
 	{
-        if (!empty($conf->discountrules->enabled)) return 0;     // Module not active, we do nothing
+		global $db;
+        //if (!empty($conf->discountrules->enabled)) return 0;     // Module not active, we do nothing
 
 	    // Put here code you want to execute when a Dolibarr business events occurs.
 		// Data and type of action are stored into $object and $action
@@ -142,7 +143,6 @@ class InterfacediscountrulesTriggers extends DolibarrTriggers
 		if ($action == 'DON_UPDATE'){
 			$action = 'DON_MODIFY';
 		}
-
         switch ($action) {
 
             // Users
@@ -205,7 +205,7 @@ class InterfacediscountrulesTriggers extends DolibarrTriggers
 		    case 'ORDER_SENTBYMAIL':
 		    case 'ORDER_CLASSIFY_BILLED':
 		    case 'ORDER_SETDRAFT':
-		    case 'LINEORDER_INSERT':
+
 
 
 			case 'LINEORDER_MODIFY':
@@ -237,7 +237,25 @@ class InterfacediscountrulesTriggers extends DolibarrTriggers
 		    case 'PROPAL_CLOSE_SIGNED':
 		    case 'PROPAL_CLOSE_REFUSED':
 		    case 'PROPAL_DELETE':
+				break;
+
 		    case 'LINEPROPAL_INSERT':
+				dol_include_once('/comm/propal/class/propal.class.php');
+				$obj = new Propal($db);
+				$obj->fetch($object->fk_propal);
+				break;
+			case 'LINEBILL_INSERT':
+				require_once DOL_DOCUMENT_ROOT . '/compta/facture/class/facture.class.php';
+				$obj = new Facture($db);
+				$obj->fetch($object->fk_facture);
+				break;
+			case 'LINEORDER_INSERT':
+				require_once DOL_DOCUMENT_ROOT . '/commande/class/commande.class.php';
+				$obj = new Commande($db);
+				$obj->fetch($object->fk_commande);
+				break;
+
+				//print '<pre>'.print_r($object,1).'</pre>';
 		    case 'LINEPROPAL_MODIFY':
 		    case 'LINEPROPAL_DELETE':
 
@@ -277,7 +295,7 @@ class InterfacediscountrulesTriggers extends DolibarrTriggers
 		    case 'BILL_CANCEL':
 		    case 'BILL_DELETE':
 		    case 'BILL_PAYED':
-		    case 'LINEBILL_INSERT':
+
 
 		    case 'LINEBILL_MODIFY':
 			// UPATE MODIFY ACTION
@@ -370,6 +388,30 @@ class InterfacediscountrulesTriggers extends DolibarrTriggers
 		        break;
 
 		    }
+
+		if (!empty($obj)) {
+			require_once __DIR__ . '/../../class/discountSearch.class.php';
+			$soc = new Societe($db);
+			$soc->fetch($obj->socid);
+
+			$qty = $object->qty;
+			$fk_product = $object->fk_product;
+			$fk_company = $obj->socid;
+			$fk_project = $obj->fk_project;
+			$fk_c_typent = 0;
+			$fk_country = $soc->country_id;
+			$date = $obj->date_creation;
+
+			$search = new DiscountSearch($db);
+			$jsonResponse = $search->search($qty,$fk_product , $fk_company, $fk_project, array(), array(), $fk_c_typent, $fk_country, 0, $date);
+
+			if (!empty($jsonResponse->fk_add_product)) {
+				$product = new Product($db);
+				$product->fetch($jsonResponse->fk_add_product);
+
+				$obj->addline($product->desc, $product->price, 1, $product->tva_tx, $txlocaltax1 = 0.0, $txlocaltax2 = 0.0, $jsonResponse->fk_add_product, $jsonResponse->reduction_add_product);
+			}
+		}
 
 		return 0;
 	}

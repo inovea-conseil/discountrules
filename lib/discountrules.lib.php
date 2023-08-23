@@ -267,6 +267,7 @@ function getDiscountRulesInterfaceMessageTpl(Translate $langs, $jsonResponse, $a
 		}
 
 		$TprepareTpMsg['discount'] = $langs->transnoentities('Discount') . " : " . $jsonResponse->reduction . "%" ;
+		$TprepareTpMsg['ProductAdd'] = $langs->transnoentities('ProductAdd') . $jsonResponse->match_on->fk_add_product . " à -" . $jsonResponse->reduction_add_product . "%" ;
 		$TprepareTpMsg['FromQty']  =  $langs->transnoentities('FromQty') . " : " . $jsonResponse->from_quantity ;
 		$TprepareTpMsg['ThirdPartyType'] = 	 $langs->transnoentities('ThirdPartyType') . " : " . $jsonResponse->typentlabel;
 

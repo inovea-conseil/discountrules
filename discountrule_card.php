@@ -71,6 +71,7 @@ if (!$res) {
 require_once DOL_DOCUMENT_ROOT.'/core/class/html.formcompany.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/class/html.formfile.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/class/html.formprojet.class.php';
+require_once DOL_DOCUMENT_ROOT . '/categories/class/categorie.class.php';
 
 include_once __DIR__.'/class/discountrule.class.php';
 include_once __DIR__.'/lib/discountrules.lib.php';
@@ -191,7 +192,7 @@ if (empty($reshook))
             }
         }
 
-        if(empty($object->product_price) && empty($object->reduction) && empty($object->product_reduction_amount)){
+        if(empty($object->product_price) && empty($object->reduction) && empty($object->product_reduction_amount) && empty($object->reduction_add_product)){
 			$error++;
 			$fieldsList = $langs->transnoentitiesnoconv($object->fields['reduction']['label'])
 				 . ', ' . $langs->transnoentitiesnoconv($object->fields['product_price']['label'])

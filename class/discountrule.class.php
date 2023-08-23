@@ -32,6 +32,8 @@ require_once DOL_DOCUMENT_ROOT . '/product/class/product.class.php';
 require_once DOL_DOCUMENT_ROOT . '/projet/class/project.class.php';
 require_once __DIR__ . '/../lib/discountrules.lib.php';
 require_once __DIR__ . '/discountruletools.class.php';
+require_once DOL_DOCUMENT_ROOT . '/categories/class/categorie.class.php';
+require_once DOL_DOCUMENT_ROOT.'/core/lib/company.lib.php';
 
 
 /**
@@ -230,8 +232,6 @@ class DiscountRule extends CommonObject
 	        'default_value' => 1,
 	        'search'=>1,
 	    ),
-
-
 		'product_price' =>array(
 			'type'=>'double(24,8)',
 			'label'=>'DiscountRulePrice',
@@ -265,14 +265,34 @@ class DiscountRule extends CommonObject
 	        'visible'=>1,
 	        'enabled'=>1,
 	        'position'=>70,
-	        'notnull'=>1,
+	        'notnull'=>0,
 	        'index'=>0,
 	        'comment'=>'',
 	        'search'=>1,
 			'help' => 'DiscountPercentHelp',
-	    ),
-
-
+	    ),'fk_add_product' => array(
+			'type' => 'integer:Product:product/class/product.class.php:1',
+			'label' => 'ProductAdd',
+			'enabled' => 1,
+			'visible' => 1,
+			'default' => 0,
+			'notnull' => 0,
+			'nullvalue'=>0,
+			'index' => 1,
+			'position' => 71
+		),
+		'reduction_add_product' =>array(
+			'type'=>'double(24,8)',
+			'label'=>'DiscountPercentAdd',
+			'visible'=>1,
+			'enabled'=>1,
+			'position'=>72,
+			'notnull'=>0,
+			'index'=>0,
+			'comment'=>'',
+			'search'=>1,
+			'help' => 'DiscountPercentHelp',
+		),
 		'fk_country' =>array(
 			'type'=>'integer',
 			'label'=>'Country',
@@ -1825,7 +1845,7 @@ class DiscountRule extends CommonObject
 			}
 			$out = Form::selectarray($keyprefix.$key.$keysuffix, $options,$value);
 		}
-		elseif (in_array($key, array('reduction', 'product_price', 'product_reduction_amount')))
+		elseif (in_array($key, array('reduction', 'product_price', 'product_reduction_amount','reduction_add_product')))
 		{
 			$out = '<input '.$required.' class="flat" type="number" name="'.$keyprefix.$key.$keysuffix.'" value="'.$value.'" placeholder="xx.xx" min="0" step="any" >';
 		}
@@ -1842,8 +1862,6 @@ class DiscountRule extends CommonObject
 		{
 			$out = parent::showInputField($val, $key, $value, $moreparam, $keysuffix, $keyprefix, $morecss, $nonewbutton);
 		}
-
-
 		return $out;
 	}
 

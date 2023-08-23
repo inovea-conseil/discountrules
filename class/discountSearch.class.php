@@ -255,6 +255,8 @@ class DiscountSearch
 			$this->result->product_price = $this->discountRule->product_price;
 			$this->result->product_reduction_amount = $this->discountRule->product_reduction_amount;
 			$this->result->reduction = $this->discountRule->reduction;
+			$this->result->fk_add_product = $this->discountRule->fk_add_product;
+			$this->result->reduction_add_product = $this->discountRule->reduction_add_product;
 			$this->result->entity = $this->discountRule->entity;
 			$this->result->from_quantity = $this->discountRule->from_quantity;
 			$this->result->fk_c_typent = $this->discountRule->fk_c_typent;
@@ -303,6 +305,11 @@ class DiscountSearch
 					$p = new Project($this->db);
 					$p->fetch($this->discountRule->lastFetchByCritResult->fk_project);
 					$this->result->match_on->project = $p->ref . ' : '.$p->title;
+				}
+				if (!empty($this->discountRule->lastFetchByCritResult->fk_add_product)) {
+					$p = new Product($this->db);
+					$p->fetch($this->discountRule->lastFetchByCritResult->fk_add_product);
+					$this->result->match_on->fk_add_product = $p->ref . ' - '.$p->label;
 				}
 			}
 		}
@@ -571,6 +578,8 @@ class DiscountSearchResult
 	public $subprice;
 	/** @var int $reduction  Réduction en pourcentage */
 	public $reduction;
+	public $fk_add_product;
+	public $reduction_add_product;
 
 	/** @var int $entity */
 	public $entity;

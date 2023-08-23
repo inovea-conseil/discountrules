@@ -204,3 +204,5 @@ CountryOrigin = Pays d'origine
 CustomCode = Nomenclature douanière ou Code SH
 DiscountRulesExtraFields = Attributs supplémentaires
 DiscountRulesSetupExtrafield = Paramètres des attributs supplémentaires de DiscountRules
+ProductAdd = Produit supplémentaire
+DiscountPercentAdd = Remise en %% sur le Produit supplémentaire

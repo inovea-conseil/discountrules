@@ -36,7 +36,13 @@ CREATE TABLE IF NOT EXISTS llx_discountrule (
   fk_reduction_tax tinyint(1) NOT NULL DEFAULT 1,
   date_from datetime NULL,
   date_to datetime NULL,
-  priority_rank int(3) NOT NULL DEFAULT 0
+  priority_rank int(3) NOT NULL DEFAULT 0,
+  fk_add_product integer,
+  reduction_add_product decimal(20,6)
 ) ENGINE=innodb;
 
-  
+ALTER TABLE llx_discountrule add fk_add_product integer;
+
+ALTER TABLE llx_discountrule add reduction_add_product decimal(20,6);
+
+

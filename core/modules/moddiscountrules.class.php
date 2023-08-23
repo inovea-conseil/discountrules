@@ -73,7 +73,7 @@ class moddiscountrules extends DolibarrModules
 
 		// Possible values for version are: 'development', 'experimental', 'dolibarr', 'dolibarr_deprecated' or a version string like 'x.y.z'
 
-		$this->version = '2.20.1';
+		$this->version = '2.21.0';
 
 		// Key used in llx_const table to save module status enabled/disabled (where discountrules is value of property name of module in uppercase)
 		$this->const_name = 'MAIN_MODULE_'.strtoupper($this->name);
@@ -87,7 +87,7 @@ class moddiscountrules extends DolibarrModules
 		// for specific path of parts (eg: /discountrules/core/modules/barcode)
 		// for specific css file (eg: /discountrules/css/discountrules.css.php)
 		$this->module_parts = array(
-		                        	'triggers' => 0,                                 	// Set this to 1 if module has its own trigger directory (core/triggers)
+		                        	'triggers' => 1,                                 	// Set this to 1 if module has its own trigger directory (core/triggers)
 									'login' => 0,                                    	// Set this to 1 if module has its own login method directory (core/login)
 									'substitutions' => 0,                            	// Set this to 1 if module has its own substitution function file (core/substitutions)
 									'menus' => 0,                                    	// Set this to 1 if module has its own menus handler directory (core/menus)
