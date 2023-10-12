@@ -240,23 +240,26 @@ class InterfacediscountrulesTriggers extends DolibarrTriggers
 				break;
 
 		    case 'LINEPROPAL_INSERT':
+			case 'LINEPROPAL_MODIFY':
 				dol_include_once('/comm/propal/class/propal.class.php');
 				$obj = new Propal($db);
 				$obj->fetch($object->fk_propal);
 				break;
 			case 'LINEBILL_INSERT':
+			case 'LINEPROPAL_MODIFY':
 				require_once DOL_DOCUMENT_ROOT . '/compta/facture/class/facture.class.php';
 				$obj = new Facture($db);
 				$obj->fetch($object->fk_facture);
 				break;
 			case 'LINEORDER_INSERT':
+			case 'LINEPROPAL_MODIFY':
 				require_once DOL_DOCUMENT_ROOT . '/commande/class/commande.class.php';
 				$obj = new Commande($db);
 				$obj->fetch($object->fk_commande);
 				break;
 
 				//print '<pre>'.print_r($object,1).'</pre>';
-		    case 'LINEPROPAL_MODIFY':
+
 		    case 'LINEPROPAL_DELETE':
 
 		        // SupplierProposal
@@ -409,7 +412,12 @@ class InterfacediscountrulesTriggers extends DolibarrTriggers
 				$product = new Product($db);
 				$product->fetch($jsonResponse->fk_add_product);
 
-				$obj->addline($product->desc, $product->price, 1, $product->tva_tx, $txlocaltax1 = 0.0, $txlocaltax2 = 0.0, $jsonResponse->fk_add_product, $jsonResponse->reduction_add_product);
+				if ($object->element = "propaldet") {
+					$res = $obj->addline($product->desc, $product->price, 1, $product->tva_tx, $txlocaltax1 = 0.0, $txlocaltax2 = 0.0, $jsonResponse->fk_add_product, $jsonResponse->reduction_add_product);
+				} else {
+					$res = $obj->addline($product->desc, $product->price, 1, $product->tva_tx, $txlocaltax1 = 0.0, $txlocaltax2 = 0.0, $jsonResponse->fk_add_product, $jsonResponse->reduction_add_product,0,0,'HT'
+						,0.0,"","",$product->type,-1,42);
+				}
 			}
 		}
 
