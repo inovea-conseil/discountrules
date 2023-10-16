@@ -412,7 +412,7 @@ class InterfacediscountrulesTriggers extends DolibarrTriggers
 				$product = new Product($db);
 				$product->fetch($jsonResponse->fk_add_product);
 
-				if ($object->element = "propaldet") {
+				if ($object->element == "propaldet") {
 					$res = $obj->addline($product->desc, $product->price, 1, $product->tva_tx, $txlocaltax1 = 0.0, $txlocaltax2 = 0.0, $jsonResponse->fk_add_product, $jsonResponse->reduction_add_product);
 				} else {
 					$res = $obj->addline($product->desc, $product->price, 1, $product->tva_tx, $txlocaltax1 = 0.0, $txlocaltax2 = 0.0, $jsonResponse->fk_add_product, $jsonResponse->reduction_add_product,0,0,'HT'
