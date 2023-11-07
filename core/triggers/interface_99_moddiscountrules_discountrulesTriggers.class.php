@@ -108,7 +108,7 @@ class InterfacediscountrulesTriggers extends DolibarrTriggers
 		}
 
 		if ($action == 'LINEORDER_UPDATE'){
-			$action == 'LINEORDER_MODIFY';
+			$action = 'LINEORDER_MODIFY';
 		}
 
 		if ($action == 'LINEBILL_UPDATE'){
@@ -125,7 +125,7 @@ class InterfacediscountrulesTriggers extends DolibarrTriggers
 			$action = 'LINEPROPAL_MODIFY';
 		}
 		if ($action == 'LINEORDER_SUPPLIER_UPDATE'){
-			$action == 'LINEORDER_SUPPLIER_MODIFY';
+			$action = 'LINEORDER_SUPPLIER_MODIFY';
 		}
 
 		if ($action == 'LINECONTRACT_UPDATE'){
@@ -208,9 +208,8 @@ class InterfacediscountrulesTriggers extends DolibarrTriggers
 
 
 
-			case 'LINEORDER_MODIFY':
 			// UPDATE or MODIFY IN THIS CASE ONLY (Or BEHAVIOR)
-			case 'LINEORDER_DELETE':
+
 
 		        // Supplier orders
 		    case 'ORDER_SUPPLIER_CREATE':
@@ -236,31 +235,43 @@ class InterfacediscountrulesTriggers extends DolibarrTriggers
 		    case 'PROPAL_SENTBYMAIL':
 		    case 'PROPAL_CLOSE_SIGNED':
 		    case 'PROPAL_CLOSE_REFUSED':
-		    case 'PROPAL_DELETE':
+			case 'PROPAL_DELETE':
+			case 'LINEPROPAL_DELETE':
+				break;
+
+			case 'LINEORDER_DELETE':
+				$this->delete_product($object,'OrderLine');
+				break;
+			case 'LINEBILL_DELETE':
+				$this->delete_product($object,'FactureLigne');
 				break;
 
 		    case 'LINEPROPAL_INSERT':
 			case 'LINEPROPAL_MODIFY':
-				dol_include_once('/comm/propal/class/propal.class.php');
-				$obj = new Propal($db);
-				$obj->fetch($object->fk_propal);
 				break;
 			case 'LINEBILL_INSERT':
-			case 'LINEPROPAL_MODIFY':
+				$object->fetch_optionals();
+				if (!empty($object->array_options["options_idpromo"])) {
+					$object->delete($user,1);
+					return 0;
+				}
+			case 'LINEBILL_MODIFY':
+				$this->delete_product($object,'FactureLigne');
 				require_once DOL_DOCUMENT_ROOT . '/compta/facture/class/facture.class.php';
 				$obj = new Facture($db);
 				$obj->fetch($object->fk_facture);
+				$this->add_free_product($obj,$object,'FactureLigne');
 				break;
+
+
 			case 'LINEORDER_INSERT':
-			case 'LINEPROPAL_MODIFY':
+			case 'LINEORDER_MODIFY':
+				$this->delete_product($object,'OrderLine');
 				require_once DOL_DOCUMENT_ROOT . '/commande/class/commande.class.php';
 				$obj = new Commande($db);
 				$obj->fetch($object->fk_commande);
+				$this->add_free_product($obj,$object,'OrderLine');
 				break;
-
-				//print '<pre>'.print_r($object,1).'</pre>';
-
-		    case 'LINEPROPAL_DELETE':
 
 		        // SupplierProposal
 		    case 'SUPPLIER_PROPOSAL_CREATE':
@@ -303,7 +314,7 @@ class InterfacediscountrulesTriggers extends DolibarrTriggers
 		    case 'LINEBILL_MODIFY':
 			// UPATE MODIFY ACTION
 
-		    case 'LINEBILL_DELETE':
+
 
 		        //Supplier Bill
 		    case 'BILL_SUPPLIER_CREATE':
@@ -392,35 +403,56 @@ class InterfacediscountrulesTriggers extends DolibarrTriggers
 
 		    }
 
-		if (!empty($obj)) {
-			require_once __DIR__ . '/../../class/discountSearch.class.php';
-			$soc = new Societe($db);
-			$soc->fetch($obj->socid);
-
-			$qty = $object->qty;
-			$fk_product = $object->fk_product;
-			$fk_company = $obj->socid;
-			$fk_project = $obj->fk_project;
-			$fk_c_typent = 0;
-			$fk_country = $soc->country_id;
-			$date = $obj->date_creation;
-
-			$search = new DiscountSearch($db);
-			$jsonResponse = $search->search($qty,$fk_product , $fk_company, $fk_project, array(), array(), $fk_c_typent, $fk_country, 0, $date);
-
-			if (!empty($jsonResponse->fk_add_product)) {
-				$product = new Product($db);
-				$product->fetch($jsonResponse->fk_add_product);
-
-				if ($object->element == "propaldet") {
-					$res = $obj->addline($product->desc, $product->price, 1, $product->tva_tx, $txlocaltax1 = 0.0, $txlocaltax2 = 0.0, $jsonResponse->fk_add_product, $jsonResponse->reduction_add_product);
-				} else {
-					$res = $obj->addline($product->desc, $product->price, 1, $product->tva_tx, $txlocaltax1 = 0.0, $txlocaltax2 = 0.0, $jsonResponse->fk_add_product, $jsonResponse->reduction_add_product,0,0,'HT'
-						,0.0,"","",$product->type,-1,42);
-				}
-			}
-		}
-
 		return 0;
+	}
+	private function delete_product($object,$element_id) {
+		global $db,$user;
+		$sql = " Select fk_object from " . MAIN_DB_PREFIX . $object->table_element . "_extrafields where idpromo =$object->rowid";
+		$resql = $db->query($sql);
+
+		if ($resql->num_rows > 0) {
+			$id_parent = $db->fetch_object($resql);
+			$line = new $element_id($db);
+			$line->fetch($id_parent->fk_object);
+			$line->delete($user,1);
+		}
+	}
+	private function  add_free_product($obj,$object,$element_id) {
+		global $db,$user;
+		require_once __DIR__ . '/../../class/discountSearch.class.php';
+		$soc = new Societe($db);
+		$soc->fetch($obj->socid);
+		$object->fetch_optionals();
+
+
+		$qty = $object->qty;
+		$fk_product = $object->fk_product;
+		$fk_company = $obj->socid;
+		$fk_project = $obj->fk_project;
+		$fk_c_typent = 0;
+		$fk_country = $soc->country_id;
+		$date = $obj->date_creation;
+
+		$search = new DiscountSearch($db);
+		$jsonResponse = $search->search($qty,$fk_product , $fk_company, $fk_project, array(), array(), $fk_c_typent, $fk_country, 0, $date);
+
+
+		if (!empty($jsonResponse->fk_add_product)) {
+			$product = new Product($db);
+			$product->fetch($jsonResponse->fk_add_product);
+			if ($object->element == "commandedet") {
+				$res = $obj->addline($product->desc, $product->price, 1, $product->tva_tx, $txlocaltax1 = 0.0, $txlocaltax2 = 0.0, $jsonResponse->fk_add_product, $jsonResponse->reduction_add_product,0,0,'HT'
+				,0.0,"","",$product->type,-1,1999);
+			} else {
+				$res = $obj->addline($product->desc, $product->price, 1, $product->tva_tx, $txlocaltax1 = 0.0, $txlocaltax2 = 0.0,
+					$jsonResponse->fk_add_product, $jsonResponse->reduction_add_product,'','',0,0,'','HT'
+					,0,$product->type,-1,1999);
+			}
+			$line = new $element_id($db);
+			$line->fetch($res);
+			$line->array_options["options_idpromo"] = $object->id;
+			$line->update($user,1);
+
+		}
 	}
 }

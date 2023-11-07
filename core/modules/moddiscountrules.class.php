@@ -73,7 +73,7 @@ class moddiscountrules extends DolibarrModules
 
 		// Possible values for version are: 'development', 'experimental', 'dolibarr', 'dolibarr_deprecated' or a version string like 'x.y.z'
 
-		$this->version = '2.21.2';
+		$this->version = '2.21.3';
 
 		// Key used in llx_const table to save module status enabled/disabled (where discountrules is value of property name of module in uppercase)
 		$this->const_name = 'MAIN_MODULE_'.strtoupper($this->name);
@@ -451,7 +451,7 @@ class moddiscountrules extends DolibarrModules
 	 */
 	public function init($options='')
 	{
-		global $conf;
+		global $conf,$langs;
 
 		require_once DOL_DOCUMENT_ROOT . "/core/lib/admin.lib.php";
 
@@ -479,6 +479,8 @@ class moddiscountrules extends DolibarrModules
 		// Create extrafields
 		include_once DOL_DOCUMENT_ROOT.'/core/class/extrafields.class.php';
 		$extrafields = new ExtraFields($this->db);
+		$res = $extrafields->addExtraField('idpromo', $langs->trans("idpromo"), 'int', 0, '10', 'commandedet', 0, 0, '', "", 1, '', 0, "","",$conf->entity,'discountrules@discountrules','$conf->discountrules->enabled ');
+		$extrafields->addExtraField('idpromo', $langs->trans("idpromo"), 'int', 0, '10', 'facturedet', 0, 0, "", "", 1, "", 0, "","",$conf->entity,'discountrules@discountrules','$conf->discountrules->enabled');
 		//$result1=$extrafields->addExtraField('myattr1', "New Attr 1 label", 'boolean', 1, 3, 'thirdparty');
 		//$result2=$extrafields->addExtraField('myattr2', "New Attr 2 label", 'string', 1, 10, 'project');
 
