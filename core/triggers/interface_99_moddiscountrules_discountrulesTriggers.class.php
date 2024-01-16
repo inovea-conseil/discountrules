@@ -199,7 +199,11 @@ class InterfacediscountrulesTriggers extends DolibarrTriggers
 		        // Customer orders
 		    case 'ORDER_CREATE':
 		    case 'ORDER_CLONE':
+				break;
 		    case 'ORDER_VALIDATE':
+				if(empty($object->array_options["options_tovalidate"]))
+					$this->is_still_sale($object);
+				break;
 		    case 'ORDER_DELETE':
 		    case 'ORDER_CANCEL':
 		    case 'ORDER_SENTBYMAIL':
@@ -420,6 +424,8 @@ class InterfacediscountrulesTriggers extends DolibarrTriggers
 	private function  add_free_product($obj,$object,$element_id) {
 		global $db,$user;
 		require_once __DIR__ . '/../../class/discountSearch.class.php';
+		require_once DOL_DOCUMENT_ROOT . '/product/class/product.class.php';
+		require_once DOL_DOCUMENT_ROOT . '/commande/class/commande.class.php';
 		$soc = new Societe($db);
 		$soc->fetch($obj->socid);
 		$object->fetch_optionals();
@@ -437,7 +443,7 @@ class InterfacediscountrulesTriggers extends DolibarrTriggers
 		$jsonResponse = $search->search($qty,$fk_product , $fk_company, $fk_project, array(), array(), $fk_c_typent, $fk_country, 0, $date);
 
 
-		if (!empty($jsonResponse->fk_add_product)) {
+		if ($jsonResponse->fk_add_product > 0) {
 			$product = new Product($db);
 			$product->fetch($jsonResponse->fk_add_product);
 			if ($object->element == "commandedet") {
@@ -451,8 +457,94 @@ class InterfacediscountrulesTriggers extends DolibarrTriggers
 			$line = new $element_id($db);
 			$line->fetch($res);
 			$line->array_options["options_idpromo"] = $object->id;
-			$line->update($user,1);
-
+			if (empty($line->price)) {
+				$line->price = $line->subprice;
+			}
+			$res  = $line->update($user,1);
+			return 1;
 		}
+		return 0;
+	}
+	private function is_still_sale($object) {
+		global $user,$db;
+		require_once __DIR__ . '/../../class/discountSearch.class.php';
+		require_once DOL_DOCUMENT_ROOT . '/commande/class/commande.class.php';
+		require_once DOL_DOCUMENT_ROOT . '/product/class/product.class.php';
+		$object->fetch_lines();
+		$ArrayLines = array();
+		$SumQty = 0;
+		$SumPrice = $object->total_ht;
+
+
+		$SumQtyAfter = 0;
+		$SumPriceAfter = 0;
+
+
+
+		foreach ($object->lines  as $line) {
+			$SumQty += $line->qty;
+			$ArrayLines[] = $line;
+			$object->deleteline($user,$line->id);
+		}
+
+		foreach ($ArrayLines  as  $line) {
+			if ($line->special_code) {
+				continue;
+			}
+			$product = new Product($db);
+			$product->fetch($line->fk_product);
+			if ($product->stock_reel >= $line->qty  ) {
+				$qty = $line->qty;
+			} else {
+				$qty = $product->stock_reel;
+			}
+			$search = new DiscountSearch($db);
+			$jsonResponse = $search->search($qty,$line->fk_product);
+			$subprice = $jsonResponse->standard_product_price;
+
+			if ( !empty($jsonResponse->match_on) ) {
+				$reduct = $jsonResponse->match_on->reduction;
+				if ( $jsonResponse->match_on->product_reduction_amount != 0  ) {
+					$subprice -= $jsonResponse->match_on->product_reduction_amount;
+				}
+				if (  $jsonResponse->match_on->product_price != 0  ) {
+					$subprice = $jsonResponse->match_on->product_price;
+				}
+			}
+
+			$res = $object->addline(
+				$line->desc,
+				$subprice,
+				$qty,
+				$line->tva_tx,
+				null,
+				null,
+				$line->fk_product,
+				// We need to pass fk_prod_fourn_price to get the right price.
+				$reduct,
+				$line->ref_fourn,
+				0
+				, 'HT'
+				, 0
+				, $line->product_type
+				, $line->info_bits
+				, FALSE // $notrigger
+				, NULL // $date_start
+				, NULL // $date_end
+				, $line->array_options
+				, null
+				, 0
+				, $line->origin
+				, $line->origin_id
+			);
+			$commandeDet = new OrderLine($db);
+			$commandeDet->fetch($res);
+			$SumQtyAfter += $qty + $this->add_free_product($object,$commandeDet,'OrderLine');
+			$SumPriceAfter += $commandeDet->total_ht;
+		}
+
+		$res = ($SumQtyAfter == $SumQty && $SumPriceAfter == $SumPrice );
+		return $res;
+
 	}
 }
