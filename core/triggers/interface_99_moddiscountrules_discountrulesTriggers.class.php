@@ -465,7 +465,7 @@ class InterfacediscountrulesTriggers extends DolibarrTriggers
 		}
 		return 0;
 	}
-	private function is_still_sale($object) {
+	public function is_still_sale($object) {
 		global $user,$db;
 		require_once __DIR__ . '/../../class/discountSearch.class.php';
 		require_once DOL_DOCUMENT_ROOT . '/commande/class/commande.class.php';
