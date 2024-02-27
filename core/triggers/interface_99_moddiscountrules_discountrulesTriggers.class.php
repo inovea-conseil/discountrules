@@ -270,7 +270,6 @@ class InterfacediscountrulesTriggers extends DolibarrTriggers
 
 			case 'LINEORDER_INSERT':
 			case 'LINEORDER_MODIFY':
-				$this->delete_product($object,'OrderLine');
 				require_once DOL_DOCUMENT_ROOT . '/commande/class/commande.class.php';
 				$obj = new Commande($db);
 				$obj->fetch($object->fk_commande);
@@ -430,7 +429,7 @@ class InterfacediscountrulesTriggers extends DolibarrTriggers
 		$soc->fetch($obj->socid);
 		$object->fetch_optionals();
 
-
+		$this->delete_product($object,$element_id);
 		$qty = $object->qty;
 		$fk_product = $object->fk_product;
 		$fk_company = $obj->socid;
@@ -460,13 +459,13 @@ class InterfacediscountrulesTriggers extends DolibarrTriggers
 			if (empty($line->price)) {
 				$line->price = $line->subprice;
 			}
-			$res  = $line->update($user,1);
-			return 1;
+			$line->update($user,1);
+			return $res;
 		}
 		return 0;
 	}
 	public function is_still_sale($object) {
-		global $user,$db;
+		global $user,$db,$mysoc;
 		require_once __DIR__ . '/../../class/discountSearch.class.php';
 		require_once DOL_DOCUMENT_ROOT . '/commande/class/commande.class.php';
 		require_once DOL_DOCUMENT_ROOT . '/product/class/product.class.php';
@@ -483,14 +482,12 @@ class InterfacediscountrulesTriggers extends DolibarrTriggers
 
 		foreach ($object->lines  as $line) {
 			$SumQty += $line->qty;
-			$ArrayLines[] = $line;
+			if ($line->special_code != "1999")
+				$ArrayLines[] = $line;
 			$object->deleteline($user,$line->id);
 		}
 
 		foreach ($ArrayLines  as  $line) {
-			if ($line->special_code) {
-				continue;
-			}
 			$product = new Product($db);
 			$product->fetch($line->fk_product);
 			if ($product->stock_reel >= $line->qty  ) {
@@ -499,9 +496,8 @@ class InterfacediscountrulesTriggers extends DolibarrTriggers
 				$qty = $product->stock_reel;
 			}
 			$search = new DiscountSearch($db);
-			$jsonResponse = $search->search($qty,$line->fk_product);
+			$jsonResponse = $search->search($qty,$line->fk_product,$object->socid);
 			$subprice = $jsonResponse->standard_product_price;
-
 			if ( !empty($jsonResponse->match_on) ) {
 				$reduct = $jsonResponse->match_on->reduction;
 				if ( $jsonResponse->match_on->product_reduction_amount != 0  ) {
@@ -510,6 +506,14 @@ class InterfacediscountrulesTriggers extends DolibarrTriggers
 				if (  $jsonResponse->match_on->product_price != 0  ) {
 					$subprice = $jsonResponse->match_on->product_price;
 				}
+			}
+			$object->fetch_thirdparty();
+			$TSellPrice = $product->getSellPrice($object->thirdparty, $mysoc);
+			if(  $subprice > $TSellPrice ) {
+				$subprice = $TSellPrice;
+			}
+			if ($reduct < $object->thirdparty->remise_client ) {
+				$reduct = $object->thirdparty->remise_client;
 			}
 
 			$res = $object->addline(
@@ -539,8 +543,16 @@ class InterfacediscountrulesTriggers extends DolibarrTriggers
 			);
 			$commandeDet = new OrderLine($db);
 			$commandeDet->fetch($res);
-			$SumQtyAfter += $qty + $this->add_free_product($object,$commandeDet,'OrderLine');
+			$SumQtyAfter += $qty ;
 			$SumPriceAfter += $commandeDet->total_ht;
+			$idline = $this->add_free_product($object,$commandeDet,'OrderLine');
+			if ($idline > 0) {
+				$commandeDetOffert = new OrderLine($db);
+				$commandeDetOffert->fetch($idline);
+				$SumQtyAfter += $commandeDetOffert->qty ;
+				$SumPriceAfter += $commandeDetOffert->total_ht;
+			}
+
 		}
 
 		$res = ($SumQtyAfter == $SumQty && $SumPriceAfter == $SumPrice );
