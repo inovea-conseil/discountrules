@@ -320,6 +320,10 @@ class DiscountSearch
 			$this->result->reduction = $this->result->defaultCustomerReduction;
 		}
 
+		if ($this->result->reduction < $s->remise_client ) {
+			$this->result->reduction  = $s->remise_client;
+		}
+
 		return $this->result;
 	}
 
