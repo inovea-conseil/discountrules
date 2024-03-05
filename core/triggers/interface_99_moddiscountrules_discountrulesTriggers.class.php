@@ -498,6 +498,7 @@ class InterfacediscountrulesTriggers extends DolibarrTriggers
 			$search = new DiscountSearch($db);
 			$jsonResponse = $search->search($qty,$line->fk_product,$object->socid);
 			$subprice = $jsonResponse->standard_product_price;
+			$reduct = 0;
 			if ( !empty($jsonResponse->match_on) ) {
 				$reduct = $jsonResponse->match_on->reduction;
 				if ( $jsonResponse->match_on->product_reduction_amount != 0  ) {
@@ -512,8 +513,8 @@ class InterfacediscountrulesTriggers extends DolibarrTriggers
 			if(  $subprice > $TSellPrice ) {
 				$subprice = $TSellPrice;
 			}
-			if ($reduct < $object->thirdparty->remise_client ) {
-				$reduct = $object->thirdparty->remise_client;
+			if ($reduct < $jsonResponse->defaultCustomerReduction ) {
+				$reduct =  $jsonResponse->defaultCustomerReduction;
 			}
 
 			$res = $object->addline(
