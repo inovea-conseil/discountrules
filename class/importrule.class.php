@@ -171,6 +171,7 @@ class ImportRule{
 
 		$objDiscount = new DiscountRule($db);
 
+	//	$lineArray = explode(",", $lineArray[0]);
 		$label 				= trim($lineArray[0]);
 		$ref_project 		= trim($lineArray[1]);
 		$ref_product 		= trim($lineArray[2]);
@@ -187,6 +188,8 @@ class ImportRule{
 		$dateFrom 			= $lineArray[13];
 		$dateTo 			= $lineArray[14];
 		$activation			= $lineArray[15];
+		$freeProduct		= $lineArray[16];
+		$reductionProduct 	= $lineArray[17];
 
 		// LABEL
 		try {
@@ -252,6 +255,10 @@ class ImportRule{
 		}catch( ErrorException $e){
 			throw $e;
 		}
+
+		$objDiscount->fk_add_product = $freeProduct;
+		$objDiscount->reduction_add_product = $reductionProduct;
+
 
 		// PRODUCT REDUCTION AMOUNT
 		try {
@@ -408,14 +415,13 @@ class ImportRule{
 		// ref product is up
 		 if ($this->validate->isNotEmptyString($ref_product)) {
 
-		 	if ($this->validate->isInDb($ref_product,"product","ref") ){
+		 	/*if ($this->validate->isInDb($ref_product,"product","ref") ){
 				 //au moins un des trois pour un produit
 				 if (!$this->validate->isNotEmptyString($reduction) && !$this->validate->isNotEmptyString($price) && !$this->validate->isNotEmptyString($reduction_amount) ){
 					 throw new ErrorException($langs->trans('atLeastOneofThemToRuleTheProductError', $lineNumber + 1, $ref_product));
 				 }
-			 }
+			 }*/
 		 }else{ // no ref product
-
 			 // prix present mais pas de product
 			 if ( $this->validate->isNotEmptyString($price)  ){
 				 throw new ErrorException($langs->trans('NoPriceIfNoProductInsertedError', $lineNumber + 1));
