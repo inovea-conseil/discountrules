@@ -347,6 +347,14 @@ function _showHelp() {
 				<th><?php print $langs->trans("activate"); ?></th>
 				<td><?php print $langs->trans("activateDesc"); ?> </td>
 			</tr>
+			<tr>
+				<th><?php print $langs->trans("idfreeproduct"); ?></th>
+				<td><?php print $langs->trans("idfreeproductDesc"); ?> </td>
+			</tr>
+			<tr>
+				<th><?php print $langs->trans("ReductionAmoutFree"); ?></th>
+				<td><?php print $langs->trans("ReductionAmoutFreeDesc"); ?> </td>
+			</tr>
 		</table>
 	</fieldset>
 	<?php

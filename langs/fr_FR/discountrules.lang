@@ -206,3 +206,8 @@ DiscountRulesExtraFields = Attributs supplémentaires
 DiscountRulesSetupExtrafield = Paramètres des attributs supplémentaires de DiscountRules
 ProductAdd = Produit supplémentaire
 DiscountPercentAdd = Remise en %% sur le Produit supplémentaire
+ReductionAmoutFree = Réduction en %% du produit offert
+ReductionAmoutFreeDesc = Réduction en %% du produit offert
+idfreeproduct = id du produit offert
+idfreeproductDesc = id du produit offert
+
