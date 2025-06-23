@@ -544,7 +544,6 @@ class InterfacediscountrulesTriggers extends DolibarrTriggers
 				, $line->origin_id
 			);
 			$commandeDet = new OrderLine($db);
-			echo "<pre>".print_r($res,1)."</pre>";
 			$commandeDet->fetch($res);
 			$SumQtyAfter += $qty ;
 			$SumPriceAfter += $commandeDet->total_ht;
@@ -557,12 +556,8 @@ class InterfacediscountrulesTriggers extends DolibarrTriggers
 			}
 
 		}
-		echo "<pre>".print_r($SumQtyAfter,1)."</pre>";
-		echo "<pre>".print_r($SumQty,1)."</pre>";
-		echo "<pre>".print_r($SumPriceAfter,1)."</pre>";
-		echo "<pre>".print_r($SumPrice,1)."</pre>";
 
-		$res = ($SumQtyAfter == $SumQty && $SumPriceAfter == $SumPrice );
+		$res = ($SumQtyAfter == $SumQty && number_format($SumPrice, 2) === number_format($SumPriceAfter, 2) );
 		return $res;
 
 	}
